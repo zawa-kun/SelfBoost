@@ -1,7 +1,8 @@
 const express = require("express");
-const app = express();
 const mongoose = require("mongoose");
 require("dotenv").config();
+
+const app = express();
 const PORT = 3000;
 
 //ルーティングファイルの読み込み
@@ -10,8 +11,6 @@ const challengeRoute = require("./routes/challenges.js");
 const postRoute = require("./routes/posts.js");
 const userRoute = require("./routes/users.js");
 
-
-
 //DB接続
 mongoose
     .connect(process.env.MONGOURL)
@@ -19,22 +18,24 @@ mongoose
         console.log("DBと接続中");
     })
     .catch( (err) => {
-        console.log(err);
+        console.log("DB接続エラー",err);
     });
 
 
-
+//ミドルウェア
+app.use(express.json());
 
 
 //ルート設定
-app.use(express.json());
 app.use("/api/auth",authRoute);
 app.use("/api/challenges",challengeRoute);
 app.use("/api/posts",postRoute);
 app.use("/api/users",userRoute);
 
+
+//ベースルート
 app.get("/",(req,res) => {
-    res.send ("hello express");
+    res.send ("Welcome to SelfBoost API");
 });
 
 
