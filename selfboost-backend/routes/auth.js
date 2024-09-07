@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
 router.get("/" , (req,res) => {
     res.send("auth");
@@ -21,11 +21,25 @@ router.post("/register",async (req,res) => {
             password: hashPassword,
         });
 
+        //JWTの生成
+        const token = jwt.sign(
+            { userId: newUser._id },
+            process.env.JWT_SECRET,
+            {expiresIn: '2h' }
+        );
+
         //DBに保存
         const user = await newUser.save();
-        return res.status(201).json({message:"ユーザーが正常に登録されました",userId:user._id});   
+        return res.status(201).json({message:"ユーザーが正常に登録されました",userId:user._id, token });   
     }catch(err){
-        return res.status(500).json(err);
+        if (err.code === 11000) {
+            // 重複キーエラーの処理
+            const field = Object.keys(err.keyPattern)[0]; //エラーが発生したフィールド
+            res.status(409).json({ message: `この${field}は既に使用されています。` });
+        } else {
+            console.error(err);
+            res.status(500).json({ message: "サーバーエラーが発生しました。" });
+        }
     }
 });
 
@@ -47,7 +61,7 @@ router.post("/login",async (req,res) => {
             {expiresIn: '2h' }
         );
 
-        const  {password, ...useWithoutPassword } = user.toObject();
+        const  {password, ...userWithoutPassword } = user.toObject();
         
         return res.status(200).json({
             message: "ログイン成功",
