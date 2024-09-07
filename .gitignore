@@ -1,0 +1,21 @@
+# 依存関係
+   node_modules/
+
+   # 環境変数
+   .env
+
+   # ログファイル
+   *.log
+
+   # ビルドファイル
+   /build
+
+   # macOS固有のファイル
+   .DS_Store
+
+   # エディタ固有のファイル
+   .vscode/
+   .idea/
+
+   # テスト関連
+   /coverage
