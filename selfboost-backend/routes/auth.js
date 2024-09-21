@@ -25,7 +25,7 @@ router.post("/register", async (req, res) => {
 
     //JWTの生成
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "2h",
+      expiresIn: "24h",
     });
 
     //DBに保存
