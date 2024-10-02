@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const User = require("../models/User");
 const { verifyToken } = require("../middleware/auth.js");
+const bcrypt = require("bcrypt");
 
 
 
@@ -32,6 +33,10 @@ router.put("/:id", verifyToken, async (req, res) => {
 
   try {
     const { password, newPassword,email, ...updateData } = req.body;
+    const user = await User.findById(req.userId);
+    if(!user){
+      return res.status(404).json({message:"ユーザーが見つかりません"});
+    }
 
     //パスワード更新の処理
     if (newPassword) {
@@ -49,6 +54,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     //メールアドレス更新の処理
     if (email) {
       const existingUser = await User.findOne({ email });
+      //ユーザーが存在しているかつそのメールアドレスが現在のユーザー以外のものである
       if (existingUser && existingUser._id.toString() !== req.userId) {
         return res
           .status(400)
@@ -57,6 +63,7 @@ router.put("/:id", verifyToken, async (req, res) => {
       updateData.email = email;
     }
 
+    //ユーザー情報更新の処理
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
       { $set: updateData },
@@ -64,7 +71,7 @@ router.put("/:id", verifyToken, async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "ユーザーが見つかりません" });
+      return res.status(404).json({ message: "ユーザー情報の更新に失敗しました" });
     }
 
     const { password: _, ...userDataToReturn } = updatedUser._doc;
