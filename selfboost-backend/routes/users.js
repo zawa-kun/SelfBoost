@@ -2,6 +2,7 @@ const router = require("express").Router();
 const User = require("../models/User");
 const {verifyToken} = require("../middleware/auth.js");
 
+
 //ユーザー情報の取得
 router.get("/:id",async (req, res) => {
   try {
@@ -13,6 +14,7 @@ router.get("/:id",async (req, res) => {
     return res.status(500).json(err);
   }
 });
+
 
 //ユーザー情報の更新(簡易検証版)
 router.put("/:id", async (req, res) => {
@@ -34,6 +36,7 @@ router.put("/:id", async (req, res) => {
     return res.status(403).json("自分のアカウントの時だけ情報を更新できます");
   }
 });
+
 
 //ユーザー削除（簡易検証版）
 router.delete("/:id", async (req, res) => {

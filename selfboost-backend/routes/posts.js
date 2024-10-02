@@ -3,16 +3,17 @@ const Post = require("../models/Post");
 const User = require("../models/User");
 const { verifyToken } = require("../middleware/auth");
 
-
-// 投稿作成ルート
-router.post("/", async (req, res) => {
+//新規投稿作成
+router.post("/", verifyToken, async (req, res) => {
   try {
     //必要なフィールドのみ取得
-    const { userId, text } = req.body;
+    const { text, imgUrl, challnegeId } = req.body;
 
     const newPost = new Post({
-      userId: userId,
+      userId: req.userId,
       text: text,
+      imgUrl: imgUrl,
+      challengeId: challnegeId,
     });
 
     const savedPost = await newPost.save();
@@ -22,7 +23,43 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 特定の投稿を取得する
+//投稿の編集
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    //投稿の存在確認
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "投稿が見つかりません" });
+
+    //編集権限の確認
+    if (!post.userId.equals(req.userId)) {
+      return res
+        .status(403)
+        .json({ message: "あなたはほかの人の投稿を編集できません" });
+    }
+
+    //更新可能なフィールドの制限
+    const { text, imgUrl, challengeId } = req.body;
+    const updateData = {};
+    if (text !== undefined) updateData.text = text;
+    if (imgUrl !== undefined) updateData.imgUrl = imgUrl;
+    if (challengeId !== undefined) updateData.challengeId = challengeId;
+
+    const updatedPost = await Post.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    return res
+      .status(200)
+      .json({ message: "編集に成功しました", post: updatedPost });
+  } catch (err) {
+    console.error("投稿編集エラー:", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+// 特定の投稿取得
 router.get("/:id", async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -33,44 +70,55 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-//タイムラインの投稿を取得する(自分＋フォロー)
-router.get("/timeline/:userId", async (req, res) => {
+//投稿削除
+router.delete("/:id", verifyToken, async (req, res) => {
   try {
-    const currentUser = await User.findById(req.params.userId);
-    if(!currentUser){
-      return res.status(404).json({message:"ユーザーが見つかりません"});
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: "投稿が見つかりません" });
+
+    // 投稿の所有者であるかの確認
+    if (!post.userId.equals(req.userId)) {
+      return res
+        .status(403)
+        .json({ message: "あなたはこの投稿を削除する権限がありません" });
     }
-    //自分＋フォロー
-    const userIds = [currentUser._id, ...currentUser.followings];
 
-    const posts = await Post.find({ userId: { $in : userIds} })
-      .sort({createdAt : -1 })
-      .limit(50)
-      .populate('userId', 'username profilePicture');
-
-    return res.status(200).json(posts);
+    await Post.findByIdAndDelete(req.params.id);
+    return res.status(200).json({ message: "投稿が削除されました" });
   } catch (err) {
-    return res.status(500).json(err);
+    console.error("投稿編集エラー:",err);
+    return res.status(500).json({message:"サーバーエラーが発生しました"});
   }
 });
 
-// 投稿を編集する
-router.put("/:id", async (req, res) => {
+//投稿にいいね
+router.put("/:id/like",verifyToken, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json("投稿が見つかりません");
+    if(!post){
+      return res.status(404).json({message: "投稿が見つかりません"});
+    }
 
-    //new ObjectId('66db22e689101f7345c2b9f0')
-    console.log(new mongoose.Types.ObjectId(req.body.userId));
-    if (post.userId.equals(new mongoose.Types.ObjectId(req.body.userId))) {
-      await Post.updateOne({ _id: req.params.id }, { $set: req.body });
-      return res.status(200).json("編集に成功しました");
+    //まだ投稿にいいねをしていなければいいね
+    if (!post.likes.includes(req.userId)) {
+      await post.updateOne({
+        $push: {
+          likes: req.userId,
+        },
+      });
+      return res.status(200).json({message:"投稿にいいねを押しました"});
+      //投稿にいいねが押されていたらいいねを外す
     } else {
-      return res.status(403).json("あなたはほかの人の投稿を編集できません");
+      await post.updateOne({
+        $pull: {
+          likes: req.userId,
+        },
+      });
+      return res.status(200).json({message:"いいねを取り消しました"});
     }
   } catch (err) {
-    return res.status(500).json(err);
+    console.error("いいね操作エラー:",err);
+    return res.status(500).json({message:"サーバーエラーが発生しました"});
   }
 });
 

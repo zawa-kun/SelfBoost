@@ -10,6 +10,7 @@ const authRoute = require("./routes/auth.js");
 const challengeRoute = require("./routes/challenges.js");
 const postRoute = require("./routes/posts.js");
 const userRoute = require("./routes/users.js");
+const timelineRoute = require("./routes/timeline.js");
 
 //DB接続
 mongoose
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use("/api/auth",authRoute);
 app.use("/api/challenges",challengeRoute);
 app.use("/api/posts",postRoute);
+app.use("/api/timeline",timelineRoute);
 app.use("/api/users",userRoute);
 
 

@@ -24,9 +24,11 @@ router.post("/register", async (req, res) => {
     });
 
     //JWTの生成
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET, {
-      expiresIn: "24h",
-    });
+    const token = jwt.sign(
+      { userId: newUser._id }, 
+      process.env.JWT_SECRET, 
+      {expiresIn: "30d",}
+    );
 
     //DBに保存
     const user = await newUser.save();
@@ -49,6 +51,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
+
 //ログイン
 router.post("/login", async (req, res) => {
   try {
@@ -62,7 +65,7 @@ router.post("/login", async (req, res) => {
 
     //JWTの生成
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "2h",
+      expiresIn: "30d",
     });
 
     const { password, ...userWithoutPassword } = user.toObject();
@@ -76,6 +79,7 @@ router.post("/login", async (req, res) => {
     return res.status(500).json(err);
   }
 });
+
 
 //ログアウト
 router.post("/logout", verifyToken, (req, res) => {
