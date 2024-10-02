@@ -1,41 +1,80 @@
 const router = require("express").Router();
 const User = require("../models/User");
-const {verifyToken} = require("../middleware/auth.js");
+const { verifyToken } = require("../middleware/auth.js");
+
 
 
 //ユーザー情報の取得
-router.get("/:id",async (req, res) => {
+router.get("/:id", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
+    if (!user)
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+
+    //パスワードと更新日時の除外
     const { password, updatedAt, ...other } = user._doc;
     return res.status(200).json(other);
   } catch (err) {
-    return res.status(500).json(err);
+    console.error("ユーザー情報取得エラー", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
 
 
-//ユーザー情報の更新(簡易検証版)
-router.put("/:id", async (req, res) => {
-  //リクエストボディのidとパラメータのidが一致する場合
-  if (req.body.id === req.params.id || req.body.isAdmin) {
-    try {
-      const updateduser = await User.findByIdAndUpdate(
-        req.params.id,
-        {
-          $set: req.body,
-        },
-        { new: true }
-      );
-      return res.status(200).json(updateduser);
-    } catch (err) {
-      return res.status(500).json(err);
+
+//ユーザー情報の更新
+router.put("/:id", verifyToken, async (req, res) => {
+  if (req.userId !== req.params.id) {
+    return res
+      .status(403)
+      .json({ message: "自分のアカウントのみ編集できます" });
+  }
+
+  try {
+    const { password, newPassword,email, ...updateData } = req.body;
+
+    //パスワード更新の処理
+    if (newPassword) {
+      if (!password) {
+        return res.status(400).json({ message: "現在のパスワードが必要です" });
+      }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "現在のパスワードが正しくありません" });
+      }
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(newPassword, salt);
     }
-  } else {
-    return res.status(403).json("自分のアカウントの時だけ情報を更新できます");
+
+    //メールアドレス更新の処理
+    if (email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser && existingUser._id.toString() !== req.userId) {
+        return res
+          .status(400)
+          .json({ message: "このメールアドレスは既に使用されています" });
+      }
+      updateData.email = email;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    const { password: _, ...userDataToReturn } = updatedUser._doc;
+    return res.status(200).json(userDataToReturn);
+  } catch (err) {
+    console.error("ユーザー情報更新エラー:", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
+
 
 
 //ユーザー削除（簡易検証版）
@@ -52,6 +91,8 @@ router.delete("/:id", async (req, res) => {
     return res.status(403).json("自分のアカウントの時だけ情報を削除できます");
   }
 });
+
+
 
 //ユーザーのフォロー
 router.put("/:id/follow", async (req, res) => {
