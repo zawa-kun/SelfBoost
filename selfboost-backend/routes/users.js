@@ -4,8 +4,6 @@ const Post = require("../models/Post.js");
 const { verifyToken } = require("../middleware/auth.js");
 const bcrypt = require("bcrypt");
 
-
-
 //ユーザー情報の取得
 router.get("/:id", verifyToken, async (req, res) => {
   try {
@@ -22,8 +20,6 @@ router.get("/:id", verifyToken, async (req, res) => {
   }
 });
 
-
-
 //ユーザー情報の更新
 router.put("/:id", verifyToken, async (req, res) => {
   if (req.userId !== req.params.id) {
@@ -33,10 +29,10 @@ router.put("/:id", verifyToken, async (req, res) => {
   }
 
   try {
-    const { password, newPassword,email, ...updateData } = req.body;
+    const { password, newPassword, email, ...updateData } = req.body;
     const user = await User.findById(req.userId);
-    if(!user){
-      return res.status(404).json({message:"ユーザーが見つかりません"});
+    if (!user) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
     }
 
     //パスワード更新の処理
@@ -46,7 +42,9 @@ router.put("/:id", verifyToken, async (req, res) => {
       }
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        return res.status(400).json({ message: "現在のパスワードが正しくありません" });
+        return res
+          .status(400)
+          .json({ message: "現在のパスワードが正しくありません" });
       }
       const salt = await bcrypt.genSalt(10);
       updateData.password = await bcrypt.hash(newPassword, salt);
@@ -72,7 +70,9 @@ router.put("/:id", verifyToken, async (req, res) => {
     );
 
     if (!updatedUser) {
-      return res.status(404).json({ message: "ユーザー情報の更新に失敗しました" });
+      return res
+        .status(404)
+        .json({ message: "ユーザー情報の更新に失敗しました" });
     }
 
     const { password: _, ...userDataToReturn } = updatedUser._doc;
@@ -83,90 +83,98 @@ router.put("/:id", verifyToken, async (req, res) => {
   }
 });
 
-
-
 //ユーザー削除
-router.delete("/:id",verifyToken, async (req, res) => {
-  if(req.params.id !== req.userId){
-    return res.status(403).json({message:"自分のアカウントのみ削除できます"});
+router.delete("/:id", verifyToken, async (req, res) => {
+  if (req.params.id !== req.userId) {
+    return res
+      .status(403)
+      .json({ message: "自分のアカウントのみ削除できます" });
   }
 
   try {
     const deletedUser = await User.findByIdAndDelete(req.userId);
-    if(!deletedUser){
-      return res.status(404).json({message:"ユーザーが見つかりません"});
+    if (!deletedUser) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
     }
 
     //関連する投稿の削除
-    await Post.deleteMany({userId: req.userId});
+    await Post.deleteMany({ userId: req.userId });
 
-    return res.status(200).json({message:"ユーザーが正常に削除できました"});
+    return res.status(200).json({ message: "ユーザーが正常に削除できました" });
   } catch (err) {
-    console.error("ユーザー削除エラー:",err);
-    return res.status(200).json({message: "サーバーエラーが発生しました"});
+    console.error("ユーザー削除エラー:", err);
+    return res.status(200).json({ message: "サーバーエラーが発生しました" });
   }
 });
 
 
 
-// //ユーザーのフォロー
-// router.put("/:id/follow", async (req, res) => {
-//   if (req.params.id != req.body.id) {
-//     try {
-//       const user = await User.findById(req.params.id);
-//       const currentUser = await User.findById(req.body.id);
-//       //フォロワーに自分がいなかったら
-//       if (!user.followers.includes(req.body.id)) {
-//         await user.updateOne({
-//           $push: {
-//             followers: req.body.id,
-//           },
-//         });
-//         await currentUser.updateOne({
-//           $push: {
-//             followings: req.params.id,
-//           },
-//         });
-//         return res.status(200).json("フォローしました");
-//       } else {
-//         return res.status(403).json("あなたはこのユーザーをフォローしています");
-//       }
-//     } catch (err) {
-//       return res.status(500).json(err);
-//     }
-//   } else {
-//     return res.status(403).json("自分をフォローすることは出来ません");
-//   }
-// });
+//ユーザーのフォロー
+router.put("/:id/follow", verifyToken, async (req, res) => {
+  if (req.params.id === req.userId) {
+    return res
+      .status(403)
+      .json({ message: "自分をフォローすることは出来ません" });
+  }
+  try {
+    const userToFollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.userId);
 
-// //ユーザーのフォローを外す
-// router.put("/:id/unfollow", async (req, res) => {
-//   if (req.params.id != req.body.id) {
-//     try {
-//       const user = await User.findById(req.params.id);
-//       const currentUser = await User.findById(req.body.id);
-//       //フォロワーに自分がいたら
-//       if (user.followers.includes(req.body.id)) {
-//         await user.updateOne({
-//           $pull: {
-//             followers: req.body.id,
-//           },
-//         });
-//         await currentUser.updateOne({
-//           $pull: {
-//             followings: req.params.id,
-//           },
-//         });
-//         return res.status(200).json("フォローを解除しました");
-//       } else {
-//         return res.status(403).json("このユーザーはフォロー解除できません");
-//       }
-//     } catch (err) {
-//       return res.status(500).json(err);
-//     }
-//   } else {
-//     return res.status(403).json("自分自身をフォロー解除することは出来ません");
-//   }
-// });
+    if (!userToFollow || !currentUser) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    if (userToFollow.followers.includes(req.userId)) {
+      return res.status(400).json({ message: "既にフォローしています" });
+    }
+
+    await User.findByIdAndUpdate(req.params.id, {
+      $addToSet: { followers: req.userId },
+    });
+    await User.findByIdAndUpdate(req.userId, {
+      $addToSet: { followings: req.params.id },
+    });
+
+    return res.status(200).json({ message: "フォローしました" });
+  } catch (err) {
+    console.error("フォローエラー:", err);
+    return res.status(200).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+
+
+//ユーザーのフォロー解除
+router.put("/:id/unfollow", verifyToken, async (req, res) => {
+  if (req.params.id === req.userId) {
+    return res
+      .status(403)
+      .json({ message: "自分自身をフォロー解除することは出来ません" });
+  }
+  try {
+    const userToUnfollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.userId);
+
+    if (!userToUnfollow || !currentUser) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
+    }
+
+    if (!currentUser.followings.includes(req.params.id)) {
+      return res.status(400).json({ message: "このユーザーをフォローしていません" });
+    }
+
+    await User.findByIdAndUpdate(req.params.id, {
+      $pull: { followers: req.userId },
+    });
+    await User.findByIdAndUpdate(req.userId, {
+      $pull: { followings: req.params.id },
+    });
+
+    return res.status(200).json({ message: "フォロー解除しました" });
+  } catch (err) {
+    console.error("フォロー解除エラー:", err);
+    return res.status(200).json({ message: "サーバーエラーが発生しました" });
+  }
+});
 
 module.exports = router;
