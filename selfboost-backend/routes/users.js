@@ -4,6 +4,8 @@ const Post = require("../models/Post.js");
 const { verifyToken } = require("../middleware/auth.js");
 const bcrypt = require("bcrypt");
 
+
+
 //ユーザー情報の取得
 router.get("/:id", verifyToken, async (req, res) => {
   try {
@@ -19,6 +21,8 @@ router.get("/:id", verifyToken, async (req, res) => {
     return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
+
+
 
 //ユーザー情報の更新
 router.put("/:id", verifyToken, async (req, res) => {
@@ -82,6 +86,8 @@ router.put("/:id", verifyToken, async (req, res) => {
     return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
+
+
 
 //ユーザー削除
 router.delete("/:id", verifyToken, async (req, res) => {

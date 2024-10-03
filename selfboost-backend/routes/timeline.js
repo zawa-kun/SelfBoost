@@ -1,29 +1,47 @@
 const router = require("express").Router();
+const Post = require("../models/Post");
+const User = require("../models/User");
+const { verifyToken } = require("../middleware/auth");
 
-//タイムラインのAPI
-router.get("/",(req,res) => {
-    res.send("timeline API");
+//メインのタイムライン：自分とフォローしているユーザーの投稿を取得
+router.get("/", verifyToken, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId);
+    if(!currentUser){
+        return res.status(404).json({message: "ユーザーが見つかりません"});
+    }
+
+    const userIds = [currentUser._id, ...currentUser.followings];
+
+    const posts = await Post.find({userId: {$in: userIds}})
+        .sort({createdAt: -1})
+        .limit(20)
+        .populate({
+            path:"userId",
+            select:"username profilePicture"
+        });
+
+    return res.status(200).json(posts);
+  } catch (err) {
+    console.error("タイムライン取得エラー：", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
 });
 
-// //タイムラインの投稿を取得する(自分＋フォロー)
-// router.get("/timeline/:userId", async (req, res) => {
-//   try {
-//     const currentUser = await User.findById(req.params.userId);
-//     if (!currentUser) {
-//       return res.status(404).json({ message: "ユーザーが見つかりません" });
-//     }
-//     //自分＋フォロー
-//     const userIds = [currentUser._id, ...currentUser.followings];
-
-//     const posts = await Post.find({ userId: { $in: userIds } })
-//       .sort({ createdAt: -1 })
-//       .limit(50)
-//       .populate("userId", "username profilePicture");
-
-//     return res.status(200).json(posts);
-//   } catch (err) {
-//     return res.status(500).json(err);
-//   }
-// });
+//ユーザーの投稿を取得
+router.get("/user/:userId",verifyToken,async (req,res) => {
+    try {
+        const posts = await Post.find({userId: req.params.userId})
+            .sort({createdAt: -1})
+            .limit(50)
+            .populate({
+                path:"userId",
+                select:"username profilePicture"
+            })
+    } catch (err) {
+        console.error("ユーザー投稿取得エラー:",err);
+        return res.status(500).json({message:"サーバーエラーが発生しました"});
+    }
+})
 
 module.exports = router;
