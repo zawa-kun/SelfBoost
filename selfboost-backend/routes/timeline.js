@@ -7,19 +7,19 @@ const { verifyToken } = require("../middleware/auth");
 router.get("/", verifyToken, async (req, res) => {
   try {
     const currentUser = await User.findById(req.userId);
-    if(!currentUser){
-        return res.status(404).json({message: "ユーザーが見つかりません"});
+    if (!currentUser) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
     }
 
     const userIds = [currentUser._id, ...currentUser.followings];
 
-    const posts = await Post.find({userId: {$in: userIds}})
-        .sort({createdAt: -1})
-        .limit(20)
-        .populate({
-            path:"userId",
-            select:"username profilePicture"
-        });
+    const posts = await Post.find({ userId: { $in: userIds } })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate({
+        path: "userId",
+        select: "username profilePicture",
+      });
 
     return res.status(200).json(posts);
   } catch (err) {
@@ -29,19 +29,28 @@ router.get("/", verifyToken, async (req, res) => {
 });
 
 //ユーザーの投稿を取得
-router.get("/user/:userId",verifyToken,async (req,res) => {
-    try {
-        const posts = await Post.find({userId: req.params.userId})
-            .sort({createdAt: -1})
-            .limit(50)
-            .populate({
-                path:"userId",
-                select:"username profilePicture"
-            })
-    } catch (err) {
-        console.error("ユーザー投稿取得エラー:",err);
-        return res.status(500).json({message:"サーバーエラーが発生しました"});
+router.get("/user/:userId", verifyToken, async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "ユーザーが見つかりません" });
     }
-})
+
+    const posts = await Post.find({ userId: userId })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate({
+        path: "userId",
+        select: "username profilePicture",
+      });
+    
+    return res.status(200).json(posts);
+  } catch (err) {
+    console.error("ユーザー投稿取得エラー", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
 
 module.exports = router;
