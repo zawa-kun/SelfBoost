@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Username is required"],
       unique: [true, "Username must be unique"],
-      minlength: [3, "Username must be at least 3 characters long"],
+      // minlength: [3, "Username must be at least 3 characters long"],
       maxlength: [20, "Username cannot be more than 20 characters long"],
       trim: true, //前後の空白無視
     },
@@ -21,7 +21,6 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
     },
     profilePicture: {
       type: String,

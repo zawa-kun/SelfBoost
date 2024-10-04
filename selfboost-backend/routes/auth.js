@@ -5,11 +5,9 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { verifyToken } = require("../middleware/auth");
 
-router.get("/", (req, res) => {
-  res.send("auth");
-});
 
-//ユーザー登録
+
+//新規ユーザー登録
 router.post("/register", async (req, res) => {
   try {
     // パスワードのハッシュ化

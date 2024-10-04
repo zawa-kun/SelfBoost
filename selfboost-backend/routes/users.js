@@ -89,7 +89,7 @@ router.put("/:id", verifyToken, async (req, res) => {
 
 
 
-//ユーザー削除
+//ユーザー情報の削除
 router.delete("/:id", verifyToken, async (req, res) => {
   if (req.params.id !== req.userId) {
     return res
@@ -115,7 +115,7 @@ router.delete("/:id", verifyToken, async (req, res) => {
 
 
 
-//ユーザーのフォロー
+//ユーザーをフォロー
 router.put("/:id/follow", verifyToken, async (req, res) => {
   if (req.params.id === req.userId) {
     return res
@@ -150,7 +150,7 @@ router.put("/:id/follow", verifyToken, async (req, res) => {
 
 
 
-//ユーザーのフォロー解除
+//ユーザーをフォロー解除
 router.put("/:id/unfollow", verifyToken, async (req, res) => {
   if (req.params.id === req.userId) {
     return res
