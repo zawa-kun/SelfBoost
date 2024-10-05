@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
+import axios from 'axios';
 
-function Register() {
+export default function Register() {
   const [darkMode, setDarkMode] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -12,35 +13,38 @@ function Register() {
   });
   const [errors,setErrors] =useState({});
   const [isSubmitting,setIsSubmitting] = useState(false);
+  const [touched,setTouched] = useState(false);
   const navigate = useNavigate();
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
   };
   
+  //データの入力
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]:value
-    }));
+    setFormData((prevData) => ({...prevData,[name]:value}));
+    setTouched(prevTouched => ({ ...prevTouched, [name]: true }));
   };
 
   const validateForm = () => {
     let newErrors = {};
     if(!formData.username.trim()) {
-      newErrors.username = true;
+      newErrors.username = "ユーザー名は必須です";
     }
-    if(!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = true;
+    if(!formData.email.trim()) {
+      newErrors.email = "メールアドレスは必須です";
+    }else if(!/\S+@\S+\.\S+/.test(formData.email)){
+      newErrors.email = "有効なメールアドレスを入力してください";
     }
-    if(formData.password.length < 6) {
-      newErrors.password = true;
+    if(formData.password.length < 6 ) {
+      newErrors.password = "パスワードは6文字以上である必要があります";
     }
     if(formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = true;
+      newErrors.confirmPassword = "パスワードが一致しません";
     }
     setErrors(newErrors);
+    //バリデーションが成功したらtrueが返される
     return Object.keys(newErrors).length === 0;
   };
 
@@ -49,23 +53,35 @@ function Register() {
     if(validateForm()){
       setIsSubmitting(true);
       try {
-        //ここでAPI呼び出し
-        console.log('Form submitted:', formData);
+        await axios.post("/auth/register",formData);
         //成功した場合ログインページまたはホームページにリダイレクト
         navigate('/login');
       } catch (error) {
         console.error('Registration failed:',error);
-        setErrors(prevErrors => ({...prevErrors, submit: '登録に失敗しました。もう一度お試しください'}));
+        if (error.response && error.response.data && error.response.data.message) {
+          // サーバーからのエラーメッセージを処理
+          if (error.response.data.message.includes("username")) {
+            setErrors(prevErrors => ({...prevErrors, username: error.response.data.message}));
+          } else if (error.response.data.message.includes("email")) {
+            setErrors(prevErrors => ({...prevErrors, email: error.response.data.message}));
+          } else {
+            setErrors(prevErrors => ({...prevErrors, submit: error.response.data.message}));
+          }
+        } else {
+          setErrors(prevErrors => ({...prevErrors, submit: '登録に失敗しました。もう一度お試しください'}));
+        }
       } finally {
+        //成功・失敗に関わらず送信状態の解除
         setIsSubmitting(false);
       }
     }
   };
 
   useEffect(() => {
-    //フォームデータが更新されたときにエラーをクリア
-    validateForm();
-  },[formData])
+    if (Object.keys(touched).length > 0) {
+      validateForm();
+    }
+  },[formData,touched]);
 
 
   return (
@@ -108,7 +124,6 @@ function Register() {
                 type="text"
                 value={formData.username}
                 onChange={handleChange}
-                required
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="ユーザー名を入力"
               />
@@ -125,7 +140,6 @@ function Register() {
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
-                required
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="メールアドレスを入力"
               />
@@ -142,7 +156,6 @@ function Register() {
                 autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
-                required
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="パスワードを設定"
               />
@@ -159,11 +172,10 @@ function Register() {
                 autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                required
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="パスワードを再入力"
               />
-              {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
             </div>
             <div>
               <button
@@ -173,6 +185,7 @@ function Register() {
               >
                 {isSubmitting ? '登録中...' : 'アカウントを作成'}
               </button>
+              {errors.submit && <p className="mt-1 text-xs text-red-500">{errors.submit}</p>}
             </div>
           </form>
           <p className={`mt-4 text-center text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -187,4 +200,3 @@ function Register() {
   );
 }
 
-export default Register;

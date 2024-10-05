@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
-const PORT = 3000;
+const PORT = 5000;
 
 //ルーティングファイルの読み込み
 const authRoute = require("./routes/auth.js");
