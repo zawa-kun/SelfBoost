@@ -85,14 +85,13 @@ const challengeSchema = new mongoose.Schema({
 challengeSchema.virtual('totalParticipants').get(function() {
   return this.participants.length;
 });
-
 challengeSchema.virtual('averageProgress').get(function() {
   if (this.participants.length === 0) return 0;
   const totalProgress = this.participants.reduce((sum, participant) => sum + participant.progress, 0);
   return totalProgress / this.participants.length;
 });
 
-// メソッド
+// 参加者のチャレンジの進捗状態の確認
 challengeSchema.methods.getParticipantStatus = function(participantId) {
   const participant = this.participants.id(participantId);
   if (!participant) return null;
