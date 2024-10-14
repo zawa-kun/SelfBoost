@@ -18,17 +18,9 @@ const challengeSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  startDate: {
-    type: Date,
-    required: true,
-  },
-  endDate: {
-    type: Date,
-    required: true,
-  },
   goalType: {
     type: String,
-    enum: ['pages', 'days', 'hours', 'minutes', 'times', 'custom'],
+    enum: ['ページ', '日', '時間', '分', '回', '章'],
     required: true,
   },
   goalValue: {
@@ -49,36 +41,15 @@ const challengeSchema = new mongoose.Schema({
       type: Date,
       default: Date.now,
     },
-    dailyProgress: [{
-      date: Date,
-      value: Number
-    }],
     lastUpdateDate: {
       type: Date,
       default: Date.now,
-    },
-    streak: {
-      type: Number,
-      default: 0,
     },
   }],
   isPublic: {
     type: Boolean,
     default: true,
   },
-  tags: [{
-    type: String,
-    trim: true,
-  }],
-  category: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  milestones: [{
-    description: String,
-    value: Number,
-  }],
 }, { timestamps: true });
 
 // 仮想フィールド

@@ -8,12 +8,16 @@ router.post("/", verifyToken, async (req, res) => {
     const newChallenge = new Challenge({
       ...req.body,
       creator: req.userId,
+      participants:[{user: req.userId }],
     });
 
     const savedChallenge = await newChallenge.save();
-    return res.status(201).json(savedChallenge);
+    return res.status(201).json({
+      message:"チャレンジが正常に作成されました",
+      challenge: savedChallenge
+    });
   } catch (err) {
-    console.error("チャレンジ登録エラー:", err);
+    console.error("チャレンジ作成エラー:", err);
     return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
@@ -169,37 +173,12 @@ router.put("/:id/progress", verifyToken, async (req, res) => {
     participant.progress = progress;
     participant.lastUpdateDate = new Date();
 
-    // 日次進捗の更新
-    const today = new Date().toISOString().split('T')[0];
-    const dailyProgressIndex = participant.dailyProgress.findIndex(
-      (dp) => dp.date.toISOString().split('T')[0] === today
-    );
-
-    if (dailyProgressIndex !== -1) {
-      participant.dailyProgress[dailyProgressIndex].value = progress;
-    } else {
-      participant.dailyProgress.push({ date: new Date(), value: progress });
-    }
-
-    // ストリークの更新
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    const hasUpdatedYesterday = participant.dailyProgress.some(
-      (dp) => dp.date.toISOString().split('T')[0] === yesterday
-    );
-
-    if (hasUpdatedYesterday || participant.dailyProgress.length === 1) {
-      participant.streak += 1;
-    } else {
-      participant.streak = 1;
-    }
-
     // チャレンジの保存
     await challenge.save();
 
     return res.status(200).json({
       message: "進捗が更新されました",
       progress: participant.progress,
-      streak: participant.streak
     });
   } catch (err) {
     console.error("進捗更新エラー:", err);
