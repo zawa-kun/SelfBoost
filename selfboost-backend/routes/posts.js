@@ -1,25 +1,41 @@
 const router = require("express").Router();
 const Post = require("../models/Post");
-const User = require("../models/User");
 const { verifyToken } = require("../middleware/auth");
+const multer = require("multer");
+const path = require("path");
 
-//新規投稿作成
-router.post("/", verifyToken, async (req, res) => {
+// Multerの設定
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
+// 新規投稿作成
+router.post("/", verifyToken, upload.single('image'), async (req, res) => {
   try {
-    //必要なフィールドのみ取得
-    const { text, imgUrl, challnegeId } = req.body;
+    // 必要なフィールドのみ取得
+    const { text, challengeId } = req.body;
 
     const newPost = new Post({
       userId: req.userId,
       text: text,
-      imgUrl: imgUrl,
-      challengeId: challnegeId,
+      challengeId: challengeId,
+      imgUrl: req.file ? `/uploads/${req.file.filename}` : null,
     });
 
     const savedPost = await newPost.save();
-    return res.status(200).json(savedPost);
+    // ユーザー情報含めて返す
+    const populatedPost = await Post.findById(savedPost._id).populate("userId", "username profilePicture");
+    return res.status(201).json(populatedPost);
   } catch (err) {
-    return res.status(500).json(err);
+    console.error("投稿作成エラー:", err);
+    return res.status(500).json({ message: "投稿の作成中にエラーが発生しました", error: err.message });
   }
 });
 

@@ -28,6 +28,24 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
+// すべての投稿を取得するタイムライン
+router.get("/all", verifyToken, async (req, res) => {
+  try {
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .populate({
+        path: "userId",
+        select: "username profilePicture",
+      });
+
+    return res.status(200).json(posts);
+  } catch (err) {
+    console.error("すべての投稿取得エラー：", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
 //ユーザーの投稿を取得
 router.get("/user/:userId", verifyToken, async (req, res) => {
   try {

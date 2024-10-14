@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/solid";
-import axios from "axios";
+import { login } from "../api/authApi";
 
 export default function Login() {
   const [darkMode, setDarkMode] = useState(false);
-  const [formData, setFormData] = useState({
+  const [userData, setuserData] = useState({
     email: "",
     password: "",
   });
@@ -22,23 +22,23 @@ export default function Login() {
   //データの入力
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
+    setuserData((prevData) => ({ ...prevData, [name]: value }));
     setTouched((prevTouched) => ({ ...prevTouched, [name]: true }));
   };
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     let newErrors = {};
-    if (!formData.email.trim()) {
+    if (!userData.email.trim()) {
       newErrors.email = "メールアドレスは必須です";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!/\S+@\S+\.\S+/.test(userData.email)) {
       newErrors.email = "有効なメールアドレスを入力してください";
     }
-    if (!formData.password) {
+    if (!userData.password) {
       newErrors.password = "パスワードは必須です";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  },[userData.email,userData.password]);
 
   const handleRememberMeChange = (e) => {
     setRememberMe(e.target.checked);
@@ -49,8 +49,8 @@ export default function Login() {
     if (validateForm()) {
       setIsSubmitting(true);
       try {
-        const response = await axios.post("/auth/login", formData);
-        const { token } = response.data;
+        const response = await login(userData);
+        const { token } = response;
         
         if(rememberMe){
           //長期的有効なトークンをローカルストレージに保存（テスト用）
@@ -59,26 +59,14 @@ export default function Login() {
           //セッションストレージに保存（ブラウザを閉じると消える）
           sessionStorage.setItem('token',token);
         }
-        //成功した場合ホームページにリダイレクト
+
         navigate("/");
       } catch (error) {
-        console.error("Registration failed:", error);
-        if (
-          error.response &&
-          error.response.data &&
-          error.response.data.message
-        ) {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            submit: error.response.data.message,
-          }));
-        } else {
-          setErrors((prevErrors) => ({
-            ...prevErrors,
-            submit:
-              "ログインに失敗しました。メールアドレスまたはパスワードを確認してください。",
-          }));
-        }
+        console.error("Login failed:", error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          submit: error.response?.data?.message || "ログインに失敗しました。メールアドレスまたはパスワードを確認してください。",
+        }));
       } finally {
         //成功・失敗に関わらず送信状態の解除
         setIsSubmitting(false);
@@ -90,7 +78,7 @@ export default function Login() {
     if (Object.keys(touched).length > 0) {
       validateForm();
     }
-  }, [formData, touched]);
+  }, [userData, touched, validateForm]);
 
   return (
     <div
@@ -181,7 +169,7 @@ export default function Login() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                value={formData.email}
+                value={userData.email}
                 onChange={handleChange}
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
                   darkMode
@@ -208,7 +196,7 @@ export default function Login() {
                 name="password"
                 type="password"
                 autoComplete="new-password"
-                value={formData.password}
+                value={userData.password}
                 onChange={handleChange}
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
                   darkMode

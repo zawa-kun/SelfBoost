@@ -1,5 +1,7 @@
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -25,6 +27,10 @@ mongoose
 
 //ミドルウェア
 app.use(express.json());
+app.use(cors({
+    origin: 'http://localhost:3000', // フロントエンドのURL
+}));
+app.use("/uploads", express.static(path.join(__dirname,'uploads')));
 
 
 //ルート設定

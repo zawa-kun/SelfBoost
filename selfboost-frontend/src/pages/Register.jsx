@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
-import axios from 'axios';
+import { register } from '../api/authApi';
+
 
 export default function Register() {
   const [darkMode, setDarkMode] = useState(false);
-  const [formData, setFormData] = useState({
+  const [userData, setuserData] = useState({
     username: '',
     email: '',
     password: '',
@@ -23,38 +24,37 @@ export default function Register() {
   //データの入力
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({...prevData,[name]:value}));
+    setuserData((prevData) => ({...prevData,[name]:value}));
     setTouched(prevTouched => ({ ...prevTouched, [name]: true }));
   };
 
-  const validateForm = () => {
+  const validateForm = useCallback(() => {
     let newErrors = {};
-    if(!formData.username.trim()) {
+    if(!userData.username.trim()) {
       newErrors.username = "ユーザー名は必須です";
     }
-    if(!formData.email.trim()) {
+    if(!userData.email.trim()) {
       newErrors.email = "メールアドレスは必須です";
-    }else if(!/\S+@\S+\.\S+/.test(formData.email)){
+    }else if(!/\S+@\S+\.\S+/.test(userData.email)){
       newErrors.email = "有効なメールアドレスを入力してください";
     }
-    if(formData.password.length < 6 ) {
+    if(userData.password.length < 6 ) {
       newErrors.password = "パスワードは6文字以上である必要があります";
     }
-    if(formData.password !== formData.confirmPassword) {
+    if(userData.password !== userData.confirmPassword) {
       newErrors.confirmPassword = "パスワードが一致しません";
     }
     setErrors(newErrors);
     //バリデーションが成功したらtrueが返される
     return Object.keys(newErrors).length === 0;
-  };
+  },[userData.username, userData.email, userData.password, userData.confirmPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if(validateForm()){
       setIsSubmitting(true);
       try {
-        await axios.post("/auth/register",formData);
-        //成功した場合ログインページまたはホームページにリダイレクト
+        await register(userData);
         navigate('/login');
       } catch (error) {
         console.error('Registration failed:',error);
@@ -81,7 +81,7 @@ export default function Register() {
     if (Object.keys(touched).length > 0) {
       validateForm();
     }
-  },[formData,touched]);
+  },[userData, touched, validateForm]);
 
 
   return (
@@ -122,7 +122,7 @@ export default function Register() {
                 id="username"
                 name="username"
                 type="text"
-                value={formData.username}
+                value={userData.username}
                 onChange={handleChange}
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="ユーザー名を入力"
@@ -138,7 +138,7 @@ export default function Register() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                value={formData.email}
+                value={userData.email}
                 onChange={handleChange}
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="メールアドレスを入力"
@@ -154,7 +154,7 @@ export default function Register() {
                 name="password"
                 type="password"
                 autoComplete="new-password"
-                value={formData.password}
+                value={userData.password}
                 onChange={handleChange}
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="パスワードを設定"
@@ -170,7 +170,7 @@ export default function Register() {
                 name="confirmPassword"
                 type="password"
                 autoComplete="new-password"
-                value={formData.confirmPassword}
+                value={userData.confirmPassword}
                 onChange={handleChange}
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${darkMode ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400' : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'} focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                 placeholder="パスワードを再入力"
