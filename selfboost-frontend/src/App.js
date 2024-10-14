@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
+import ChallengePage from './pages/ChallengePage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/login" element={<Login/>}/>
         <Route path="/register" element={<Register/>}/>
         <Route path="/profile/:id" element={<Profile/>}/>
+        <Route path="/challenge" element={<ChallengePage/>}/>
       </Routes>
     </Router>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function RecommendedChallenges({darkMode}) {
   return (
@@ -24,15 +25,17 @@ function RecommendedChallenges({darkMode}) {
           21日間早起きチャレンジ
         </li>
       </ul>
-      <button
-        className={`mt-4 w-full px-4 py-2 rounded-md ${
-          darkMode
-            ? "bg-blue-600 hover:bg-blue-700"
-            : "bg-blue-500 hover:bg-blue-600"
-        } text-white`}
-      >
-        新しいチャレンジを始める
-      </button>
+      <Link to="/challenge">
+        <button
+          className={`mt-4 w-full px-4 py-2 rounded-md ${
+            darkMode
+              ? "bg-blue-600 hover:bg-blue-700"
+              : "bg-blue-500 hover:bg-blue-600"
+          } text-white`}
+        >
+          新しいチャレンジを始める
+        </button>
+      </Link>
     </div>
   );
 }
