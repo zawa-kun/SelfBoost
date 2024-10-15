@@ -20,7 +20,7 @@ const challengeSchema = new mongoose.Schema({
   },
   goalType: {
     type: String,
-    enum: ['ページ', '日', '時間', '分', '回', '章'],
+    enum: ['ページ', '日', '時間', '分', '回', '章','km'],
     required: true,
   },
   goalValue: {
@@ -56,26 +56,21 @@ const challengeSchema = new mongoose.Schema({
 challengeSchema.virtual('totalParticipants').get(function() {
   return this.participants.length;
 });
+
 challengeSchema.virtual('averageProgress').get(function() {
   if (this.participants.length === 0) return 0;
   const totalProgress = this.participants.reduce((sum, participant) => sum + participant.progress, 0);
   return totalProgress / this.participants.length;
 });
 
-// 参加者のチャレンジの進捗状態の確認
-challengeSchema.methods.getParticipantStatus = function(participantId) {
-  const participant = this.participants.id(participantId);
-  if (!participant) return null;
+challengeSchema.virtual('participantStatus').get(function(userId) {
+  const participant = this.participants.find(p => p.user.toString() === userId);
   
-  if (participant.progress >= this.goalValue) return 'completed';
-  if (participant.progress > 0) return 'in progress';
-  return 'not started';
-};
-
-challengeSchema.methods.isActive = function() {
-  const now = new Date();
-  return now >= this.startDate && now <= this.endDate;
-};
+  if (!participant) return '未参加';
+  if (participant.progress >= this.goalValue) return '完了';
+  if (participant.progress > 0) return '進行中';
+  return '未開始';
+});
 
 // JSON変換時に仮想フィールドを含める
 challengeSchema.set('toJSON', { virtuals: true });

@@ -37,7 +37,8 @@ router.get("/all", verifyToken, async (req, res) => {
       .populate({
         path: "userId",
         select: "username profilePicture",
-      });
+      })
+      .lean();
 
     return res.status(200).json(posts);
   } catch (err) {

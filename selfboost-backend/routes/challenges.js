@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const Challenge = require("../models/Challenge");
+const User = require("../models/User");
 const { verifyToken } = require("../middleware/auth");
 
 //チャレンジ作成
@@ -12,6 +13,10 @@ router.post("/", verifyToken, async (req, res) => {
     });
 
     const savedChallenge = await newChallenge.save();
+    await User.findByIdAndUpdate(req.userId,
+      {$addToSet: { challenges : req.userId },
+    });
+
     return res.status(201).json({
       message:"チャレンジが正常に作成されました",
       challenge: savedChallenge
@@ -23,12 +28,16 @@ router.post("/", verifyToken, async (req, res) => {
 });
 
 
-//チャレンジ一覧取得
-router.get("/", async (req, res) => {
+//チャレンジ一覧取得(すべて)
+router.get("/", verifyToken, async (req, res) => {
   try {
-    const challenges = await Challenge.find({ isPublic: true })
-      .sort({ createdAt: -1 })
-      .populate("creator", "username");
+    const currentUserId = req.userId;
+    const challenges = await Challenge.find({ 
+      isPublic: true,
+      'participants.user': { $ne: currentUserId } // 現在参加していないチャレンジのみ
+    })
+    .sort({"participants.length": -1 }) //参加者多い順
+    .populate("creator", "username");
 
     return res.status(200).json(challenges);
   } catch (err) {
@@ -38,8 +47,23 @@ router.get("/", async (req, res) => {
 });
 
 
+//マイチャレンジの取得
+router.get("/my-challenge", verifyToken, async (req,res)=> {
+  try {
+    const myChallenges = await Challenge.find({
+      "participants.user" : req.userId
+    })
+    .populate('creator','username');
+    
+    return res.status(200).json(myChallenges);
+  } catch (err) {
+    console.error("マイチャレンジ取得エラー:",err);
+    return res.status(500).json({message:"サーバーエラーが発生しました"});
+  }
+});
+
 //特定のチャレンジ取得
-router.get("/:id", async (req, res) => {
+router.get("/:id", verifyToken, async (req, res) => {
   try {
     const challenge = await Challenge.findById(req.params.id)
       .populate("creator", "username")
@@ -56,55 +80,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-
-//チャレンジ更新
-router.put("/:id", verifyToken, async (req, res) => {
-  try {
-    const challenge = await Challenge.findById(req.params.id);
-    if (!challenge) {
-      return res.status(404).json({ message: "チャレンジが見つかりません" });
-    }
-
-    if (challenge.creator.toString() !== req.userId) {
-      return res.status(403).json({ message: "更新権限がありません" });
-    }
-
-    const updatedChallenge = await Challenge.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true }
-    );
-
-    return res.status(200).json(updatedChallenge);
-  } catch (err) {
-    console.error("チャレンジ更新エラー:", err);
-    return res.status(500).json({ message: "サーバーエラーが発生しました" });
-  }
-});
-
-
-//チャレンジ削除
-router.delete("/:id", verifyToken, async (req, res) => {
-  try {
-    const challenge = await Challenge.findById(req.params.id);
-    if (!challenge) {
-      return res.status(404).json({ message: "チャレンジが見つかりません" });
-    }
-
-    if (challenge.creator.toString() !== req.userId) {
-      return res.status(403).json({ message: "削除権限がありません" });
-    }
-
-    await Challenge.findByIdAndDelete(req.userId);
-
-    return res.status(200).json({ message: "チャレンジを削除しました" });
-  } catch (err) {
-    console.error("チャレンジ削除エラー:", err);
-    return res.status(500).json({ message: "サーバーエラーが発生しました" });
-  }
-});
-
-
 //チャレンジの参加
 router.put("/:id/join", verifyToken, async (req, res) => {
   try {
@@ -113,16 +88,12 @@ router.put("/:id/join", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "チャレンジが見つかりません" });
     }
 
-    if (
-      challenge.participants.some((p) => {
-        p.user.toString() === req.userId;
-      })
-    ) {
+    if (challenge.participants.some((p) => {p.user.toString() === req.userId;})){
       return res.status(400).json({ message: "既に参加しています" });
     }
 
     const result = await Challenge.findByIdAndUpdate(
-      req.prams.id,
+      req.params.id,
       { $push: { participants: { user: req.userId } } },
       { new: true, runValidators: true }
     );
@@ -142,7 +113,6 @@ router.put("/:id/join", verifyToken, async (req, res) => {
     return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
-
 
 // 進捗更新
 router.put("/:id/progress", verifyToken, async (req, res) => {
@@ -182,6 +152,53 @@ router.put("/:id/progress", verifyToken, async (req, res) => {
     });
   } catch (err) {
     console.error("進捗更新エラー:", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+//チャレンジ更新(テスト用)
+router.put("/:id", verifyToken, async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) {
+      return res.status(404).json({ message: "チャレンジが見つかりません" });
+    }
+
+    if (challenge.creator.toString() !== req.userId) {
+      return res.status(403).json({ message: "更新権限がありません" });
+    }
+
+    const updatedChallenge = await Challenge.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+
+    return res.status(200).json(updatedChallenge);
+  } catch (err) {
+    console.error("チャレンジ更新エラー:", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+
+//チャレンジ削除
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const challenge = await Challenge.findById(req.params.id);
+    if (!challenge) {
+      return res.status(404).json({ message: "チャレンジが見つかりません" });
+    }
+
+    if (challenge.creator.toString() !== req.userId) {
+      return res.status(403).json({ message: "削除権限がありません" });
+    }
+
+    await Challenge.findByIdAndDelete(req.params.id);
+
+    return res.status(200).json({ message: "チャレンジを削除しました" });
+  } catch (err) {
+    console.error("チャレンジ削除エラー:", err);
     return res.status(500).json({ message: "サーバーエラーが発生しました" });
   }
 });
