@@ -1,29 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Footer from '../components/Footer';
 import CreateChallengeModal from '../components/CreateChallengeModal';
 import ChallengeList from '../components/ChallengeList';
 import ProgressUpdateModal from '../components/ProgressUpdateModal';
+import { getChallenges, getMyChallenges, joinChallenge, updateProgress } from '../api/challengeApi';
+import { useUser } from '../contexts/UserContext';
 
 function ChallengePage() {
+  const currentUser = useUser();
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [challenges, setChallenges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('my');
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  useEffect(() => {
+    fetchChallenges(activeTab);
+  }, [activeTab]);
+
+  const handleJoinChallenge = async (challengeId) => {
+    try {
+      await joinChallenge(challengeId);
+      // 成功後、チャレンジリストを更新
+      await fetchChallenges(activeTab);
+      // オプション: 成功メッセージを表示
+      alert("チャレンジに参加しました！");
+    } catch (error) {
+      console.error('Challenge join failed:', error);
+      // エラーメッセージを表示
+      alert("チャレンジへの参加に失敗しました。もう一度お試しください。");
+    }
+  };
+
+  const handleCreateSuccess = async (newChallenge) => {
+    setIsCreateModalOpen(false);
+    // チャレンジリストを更新
+    await fetchChallenges(activeTab);
+    // オプション: 成功メッセージを表示
+    alert("新しいチャレンジが作成されました！");
+  };
+  
+
+  const fetchChallenges = async (tab = 'my') => {
+    try {
+      setLoading(true);
+      setError(null);
+      let challengeData;
+      if (tab === 'my') {
+        challengeData = await getMyChallenges();
+      } else if (tab === 'public') {
+        challengeData = await getChallenges();
+      }
+      setChallenges(challengeData);
+    } catch (err) {
+      setError("チャレンジの取得に失敗しました。後でもう一度お試しください。");
+      console.error("チャレンジ取得エラー:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdateProgress = (challenge) => {
     setSelectedChallenge(challenge);
     setIsProgressModalOpen(true);
   };
 
-  const handleJoinChallenge = (challengeId) => {
-    console.log(`チャレンジに参加: チャレンジID ${challengeId}`);
-    // ここでチャレンジ参加のロジックを実装します
+  const handleProgressUpdate = async (challengeId, newProgress) => {
+    try {
+      console.log(challengeId, newProgress);
+      await updateProgress(challengeId, { progress: newProgress });
+      // 成功後、チャレンジリストを更新
+      await fetchChallenges(activeTab);
+      setIsProgressModalOpen(false);
+    } catch (error) {
+      console.error('Progress update failed:', error);
+      throw error;
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
   };
 
   return (
@@ -47,11 +112,21 @@ function ChallengePage() {
               </button>
             </div>
             
-            <ChallengeList 
-              darkMode={darkMode}
-              onUpdateProgress={handleUpdateProgress}
-              onJoinChallenge={handleJoinChallenge}
-            />
+            {loading ? (
+              <p>チャレンジを読み込んでいます...</p>
+            ) : error ? (
+              <p className="text-red-500">{error}</p>
+            ) : (
+              <ChallengeList 
+                darkMode={darkMode}
+                challenges={challenges}
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                onUpdateProgress={handleUpdateProgress}
+                onJoinChallenge={handleJoinChallenge}
+                currentUserId={currentUser.user._id} // 実際のユーザーIDに置き換えてください
+              />
+            )}
           </div>
         </main>
       </div>
@@ -62,11 +137,7 @@ function ChallengePage() {
         <CreateChallengeModal
           darkMode={darkMode}
           onClose={() => setIsCreateModalOpen(false)}
-          onCreateSuccess={() => {
-            console.log('新しいチャレンジが作成されました');
-            setIsCreateModalOpen(false);
-            // ここでチャレンジリストを更新するロジックを実装します
-          }}
+          onCreateSuccess={handleCreateSuccess}
         />
       )}
       
@@ -78,6 +149,7 @@ function ChallengePage() {
             setIsProgressModalOpen(false);
             setSelectedChallenge(null);
           }}
+          onUpdateSuccess={handleProgressUpdate}
         />
       )}
     </div>

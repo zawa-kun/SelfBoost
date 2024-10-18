@@ -1,25 +1,50 @@
 import apiClient from './apiClient';
 
+//チャレンジ作成
 export const createChallenge = async (challengeData) => {
   try {
     const response = await apiClient.post('/challenges', challengeData);
     return response.data;
   } catch (error) {
-    console.error('Error creating challenge:', error);
+    console.error('チャレンジ作成エラー:', error);
     throw error;
   }
 };
 
+// ユーザーの参加しているチャレンジの詳細を取得
+export const getUserChallenges = async (userId) => {
+  try {
+    const response = await apiClient.get(`/challenges/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user challenges:', error);
+    throw error;
+  }
+};
+
+//チャレンジ取得（すべて）
 export const getChallenges = async () => {
   try {
     const response = await apiClient.get('/challenges');
     return response.data;
   } catch (error) {
-    console.error('Error fetching challenges:', error);
+    console.error('すべてのチャレンジ取得エラー:', error);
     throw error;
   }
 };
 
+//チャレンジ取得（自分が登録しているチャレンジ）
+export const getMyChallenges = async () => {
+  try {
+    const response = await apiClient.get('/challenges/my-challenge');
+    return response.data;
+  } catch (error) {
+    console.error('マイチャレンジ取得エラー:', error);
+    throw error;
+  }
+};
+
+//特定のチャレンジ取得
 export const getChallenge = async (challengeId) => {
   try {
     const response = await apiClient.get(`/challenges/${challengeId}`);
@@ -30,6 +55,7 @@ export const getChallenge = async (challengeId) => {
   }
 };
 
+//チャレンジの更新
 export const updateChallenge = async (challengeId, challengeData) => {
   try {
     const response = await apiClient.put(`/challenges/${challengeId}`, challengeData);
@@ -40,6 +66,7 @@ export const updateChallenge = async (challengeId, challengeData) => {
   }
 };
 
+//チャレンジの削除
 export const deleteChallenge = async (challengeId) => {
   try {
     const response = await apiClient.delete(`/challenges/${challengeId}`);
@@ -50,6 +77,7 @@ export const deleteChallenge = async (challengeId) => {
   }
 };
 
+//チャレンジ参加
 export const joinChallenge = async (challengeId) => {
   try {
     const response = await apiClient.put(`/challenges/${challengeId}/join`);
@@ -60,9 +88,12 @@ export const joinChallenge = async (challengeId) => {
   }
 };
 
+//進捗更新
 export const updateProgress = async (challengeId, progressData) => {
   try {
+    console.log(progressData);
     const response = await apiClient.put(`/challenges/${challengeId}/progress`, progressData);
+    console.log(response.data);
     return response.data;
   } catch (error) {
     console.error('Error updating progress:', error);

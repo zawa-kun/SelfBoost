@@ -1,8 +1,10 @@
 import React from "react";
 import {MoonIcon, SunIcon ,UserCircleIcon,HomeIcon,} from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
+import { useUser } from "../contexts/UserContext";
 
 function Header({ darkMode, toggleSidebar, toggleDarkMode }) {
+  const {user} = useUser();
   return (
     <>
       <header
@@ -17,6 +19,7 @@ function Header({ darkMode, toggleSidebar, toggleDarkMode }) {
             </button>
             <h1 className="text-xl md:text-2xl font-bold">SelfBoost</h1>
           </Link>
+            {user && <span className="text-sm">{user.username}</span>}
           <div className="flex items-center space-x-2 md:space-x-4">
             <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
               <UserCircleIcon className="h-5 w-5 md:h-6 md:w-6" />

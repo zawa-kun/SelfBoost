@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/solid";
 import { login } from "../api/authApi";
+import { useUser } from "../contexts/UserContext";
 
 export default function Login() {
   const [darkMode, setDarkMode] = useState(false);
@@ -13,6 +14,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const { setUser } = useUser();
   const navigate = useNavigate();
 
   const toggleDarkMode = () => {
@@ -50,16 +52,19 @@ export default function Login() {
       setIsSubmitting(true);
       try {
         const response = await login(userData);
-        const { token } = response;
+        const { token, user } = response;
         
+        // トークンを保存
         if(rememberMe){
-          //長期的有効なトークンをローカルストレージに保存（テスト用）
-          localStorage.setItem('token',token);
-        }else{
-          //セッションストレージに保存（ブラウザを閉じると消える）
-          sessionStorage.setItem('token',token);
+          localStorage.setItem('token', token);
+        } else {
+          sessionStorage.setItem('token', token);
         }
 
+        // ユーザー情報を設定
+        setUser(user);
+
+        // ホームページにリダイレクト
         navigate("/");
       } catch (error) {
         console.error("Login failed:", error);
@@ -68,7 +73,6 @@ export default function Login() {
           submit: error.response?.data?.message || "ログインに失敗しました。メールアドレスまたはパスワードを確認してください。",
         }));
       } finally {
-        //成功・失敗に関わらず送信状態の解除
         setIsSubmitting(false);
       }
     }

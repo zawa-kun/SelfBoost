@@ -1,10 +1,12 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 function Post({ darkMode, post }) {
-  if (!post || !post.userId) {
+  if (!post) {
     return null; // または適切なローディング表示
   }
-
+  console.log(post.userId._id);
+  const postUserId = post.userId._id;
   return (
     <div
       className={`p-4 rounded-lg ${
@@ -12,11 +14,13 @@ function Post({ darkMode, post }) {
       }`}
     >
       <div className="flex items-center mb-2">
+        <Link to={`/profile/${postUserId}`}>
         <img
           className="h-10 w-10 rounded-full mr-3"
           src={post.userId.profilePicture || `https://i.pravatar.cc/40?img=${post.user._id}`}
           alt="User avatar"
         />
+        </Link>
         <div>
           <p className="font-semibold">{post.userId.username}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">

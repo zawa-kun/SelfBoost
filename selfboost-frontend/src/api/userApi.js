@@ -30,12 +30,24 @@ export const deleteUser = async (userId) => {
   }
 };
 
+// userApi.js
+
+export const checkFollowStatus = async (userId) => {
+  try {
+    const response = await apiClient.get(`/users/${userId}/follow-status`);
+    return response.data.isFollowing;
+  } catch (error) {
+    console.error('フォロー状態の確認に失敗しました:', error);
+    throw error;
+  }
+};
+
 export const followUser = async (userId) => {
   try {
     const response = await apiClient.put(`/users/${userId}/follow`);
     return response.data;
   } catch (error) {
-    console.error('Error following user:', error);
+    console.error('フォローに失敗しました:', error);
     throw error;
   }
 };
@@ -45,7 +57,7 @@ export const unfollowUser = async (userId) => {
     const response = await apiClient.put(`/users/${userId}/unfollow`);
     return response.data;
   } catch (error) {
-    console.error('Error unfollowing user:', error);
+    console.error('フォロー解除に失敗しました:', error);
     throw error;
   }
 };

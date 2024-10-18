@@ -1,8 +1,28 @@
 import React from 'react'
-import { HomeIcon, UserIcon, CogIcon, ChatBubbleLeftIcon, FlagIcon } from '@heroicons/react/24/solid';
+import { HomeIcon, UserIcon, CogIcon, ChatBubbleLeftIcon, FlagIcon , ArrowRightOnRectangleIcon} from '@heroicons/react/24/solid';
 import { Link } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../api/authApi';
 
 function Sidebar({darkMode,sidebarOpen}) {
+  const { user, setUser } = useUser();
+  const navigate = useNavigate();
+  const currentUserId = user._id;
+
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null);
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <>
     <aside className={`fixed left-0 top-16 bottom-0 w-64 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg transition-transform duration-300 ease-in-out z-10 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
@@ -18,10 +38,12 @@ function Sidebar({darkMode,sidebarOpen}) {
                 
               </li>
               <li>
-                <button className="w-full flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
-                  <UserIcon className="h-5 w-5 mr-2" />
-                  プロフィール
-                </button>
+                <Link to={`profile/${user._id}`}>
+                  <button className="w-full flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <UserIcon className="h-5 w-5 mr-2" />
+                    プロフィール
+                  </button>
+                </Link>
               </li>
               <li>
                 <Link to="/challenge">
@@ -43,6 +65,14 @@ function Sidebar({darkMode,sidebarOpen}) {
                   設定
                 </button>
               </li>
+              {user && (
+              <li>
+                <button onClick={handleLogout} className="w-full flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+                  <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                  ログアウト
+                </button>
+              </li>
+            )}
             </ul>
           </nav>
         </aside>
