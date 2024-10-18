@@ -5,6 +5,19 @@ const { verifyToken } = require("../middleware/auth.js");
 const bcrypt = require("bcrypt");
 
 
+// 現在のユーザー情報を取得
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'ユーザーが見つかりません' });
+    }
+    return res.json(user);
+  } catch (err) {
+    console.error('ユーザー情報取得エラー:', err);
+    return res.status(500).json({ message: 'サーバーエラーが発生しました' });
+  }
+});
 
 //ユーザー情報の取得
 router.get("/:id", verifyToken, async (req, res) => {
@@ -182,5 +195,19 @@ router.put("/:id/unfollow", verifyToken, async (req, res) => {
     return res.status(200).json({ message: "サーバーエラーが発生しました" });
   }
 });
+
+// フォロー状態の確認
+router.get("/:id/follow-status", verifyToken, async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId);
+    const isFollowing = currentUser.followings.includes(req.params.id);
+    return res.status(200).json({ isFollowing });
+  } catch (err) {
+    console.error("フォロー状態確認エラー:", err);
+    return res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+
 
 module.exports = router;

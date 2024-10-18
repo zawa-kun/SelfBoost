@@ -63,13 +63,15 @@ challengeSchema.virtual('averageProgress').get(function() {
   return totalProgress / this.participants.length;
 });
 
-challengeSchema.virtual('participantStatus').get(function(userId) {
-  const participant = this.participants.find(p => p.user.toString() === userId);
-  
-  if (!participant) return '未参加';
-  if (participant.progress >= this.goalValue) return '完了';
-  if (participant.progress > 0) return '進行中';
-  return '未開始';
+challengeSchema.virtual('participantStatus').get(function() {
+  return function(userId) {
+    const participant = this.participants.find(p => p.user.toString() === userId);
+    
+    if (!participant) return '未参加';
+    if (participant.progress >= this.goalValue) return '完了';
+    if (participant.progress > 0) return '進行中';
+    return '未開始';
+  };
 });
 
 // JSON変換時に仮想フィールドを含める
