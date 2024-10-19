@@ -6,20 +6,23 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import ChallengePage from './pages/ChallengePage';
 import { UserProvider } from './contexts/UserContext';
+import { DarkModeProvider } from './contexts/DarkModeContext';
 import { PrivateRoute } from './components/PrivateRoute';
 
 function App() {
   return (
     <UserProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<PrivateRoute><Home/></PrivateRoute>}/>
-          <Route path="/login" element={<PrivateRoute authRequired={false}><Login/></PrivateRoute>}/>
-          <Route path="/register" element={<PrivateRoute authRequired={false}><Register/></PrivateRoute>}/>
-          <Route path="/profile/:id" element={<PrivateRoute><Profile/></PrivateRoute>}/>
-          <Route path="/challenge" element={<PrivateRoute><ChallengePage/></PrivateRoute>}/>
-        </Routes>
-      </Router>
+      <DarkModeProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<PrivateRoute><Home/></PrivateRoute>}/>
+            <Route path="/login" element={<PrivateRoute authRequired={false}><Login/></PrivateRoute>}/>
+            <Route path="/register" element={<PrivateRoute authRequired={false}><Register/></PrivateRoute>}/>
+            <Route path="/profile/:id" element={<PrivateRoute><Profile/></PrivateRoute>}/>
+            <Route path="/challenge" element={<PrivateRoute><ChallengePage/></PrivateRoute>}/>
+          </Routes>
+        </Router>
+      </DarkModeProvider>
     </UserProvider>
   );
 }

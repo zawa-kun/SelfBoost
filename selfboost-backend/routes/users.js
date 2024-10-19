@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Post = require("../models/Post.js");
 const { verifyToken } = require("../middleware/auth.js");
 const bcrypt = require("bcrypt");
+const upload = require('../middleware/upload');
 
 
 // 現在のユーザー情報を取得
@@ -38,7 +39,10 @@ router.get("/:id", verifyToken, async (req, res) => {
 
 
 //ユーザー情報の更新
-router.put("/:id", verifyToken, async (req, res) => {
+router.put("/:id", verifyToken, upload.fields([
+  {name: 'avatar', maxcount: 1 },
+  {name: 'background', maxCount: 1 }
+]), async (req, res) => {
   if (req.userId !== req.params.id) {
     return res
       .status(403)
@@ -77,6 +81,14 @@ router.put("/:id", verifyToken, async (req, res) => {
           .json({ message: "このメールアドレスは既に使用されています" });
       }
       updateData.email = email;
+    }
+
+    // 画像更新の処理
+    if (req.files.avatar) {
+      updateData.profilePicture = `/uploads/avatars/${req.files.avatar[0].filename}`;
+    }
+    if (req.files.background) {
+      updateData.backgroundPicture = `/uploads/backgrounds/${req.files.background[0].filename}`;
     }
 
     //ユーザー情報更新の処理

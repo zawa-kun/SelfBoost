@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import Footer from '../components/Footer';
@@ -7,10 +7,13 @@ import ChallengeList from '../components/ChallengeList';
 import ProgressUpdateModal from '../components/ProgressUpdateModal';
 import { getChallenges, getMyChallenges, joinChallenge, updateProgress } from '../api/challengeApi';
 import { useUser } from '../contexts/UserContext';
+import { DarkModeContext } from '../contexts/DarkModeContext';
+
 
 function ChallengePage() {
   const currentUser = useUser();
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -20,7 +23,6 @@ function ChallengePage() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('my');
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   useEffect(() => {

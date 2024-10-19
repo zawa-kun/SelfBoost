@@ -1,6 +1,18 @@
 import React, { useState } from "react";
 import ChallengeDetailsModal from "./ChallengeDetailsModal";
 
+const goalTypeColors = {
+  'ページ': 'bg-blue-600',
+  '日': 'bg-green-600',
+  '時間': 'bg-yellow-600',
+  '分': 'bg-red-600',
+  '回': 'bg-purple-600',
+  '章': 'bg-indigo-600',
+  'km': 'bg-pink-600',
+  // デフォルトの色
+  'default': 'bg-gray-600'
+};
+
 function ChallengeCard({challenge,darkMode,onUpdateProgress,onJoinChallenge,currentUserId,isPersonal,}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { _id, title, goalValue, goalType, participants, totalParticipants } = challenge;
@@ -34,7 +46,7 @@ function ChallengeCard({challenge,darkMode,onUpdateProgress,onJoinChallenge,curr
           <>
             <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-2">
               <div
-                className="bg-blue-600 h-2.5 rounded-full"
+                className={`${goalTypeColors[challenge.goalType] || goalTypeColors['default']} h-2.5 rounded-full`}
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>

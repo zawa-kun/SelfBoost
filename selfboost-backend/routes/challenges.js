@@ -45,6 +45,62 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
+// おすすめのチャレンジを取得するための新しいルート
+router.get('/recommended', verifyToken, async (req, res) => {
+  try {
+    const recommendedChallenges = await Challenge.aggregate([
+      { $match: { isPublic: true } },
+      { $addFields: { participantCount: { $size: "$participants" } } },
+      { $sort: { participantCount: -1 } },
+      { $limit: 3 },
+      { $project: { 
+        _id: 1, 
+        title: 1, 
+        description: 1, 
+        goalType: 1, 
+        goalValue: 1,
+        participantCount: 1
+      }}
+    ]);
+
+    res.status(200).json(recommendedChallenges);
+  } catch (err) {
+    console.error("おすすめチャレンジ取得エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
+//特定のユーザーのチャレンジ進捗度上位３つを表示
+router.get('/user/top', verifyToken, async (req, res) => {
+  try {
+    // ユーザーが参加しているすべてのチャレンジを取得
+    const challenges = await Challenge.find({ 
+      "participants.user": req.userId 
+    });
+
+    // チャレンジをメモリ上でソートし、上位3つを選択
+    const topChallenges = challenges
+      .map(challenge => {
+        const userParticipation = challenge.participants.find(p => p.user.toString() === req.userId);
+        return {
+          _id: challenge._id,
+          title: challenge.title,
+          goalType: challenge.goalType,
+          goalValue: challenge.goalValue,
+          progress: userParticipation ? userParticipation.progress : 0,
+          progressPercentage: userParticipation ? (userParticipation.progress / challenge.goalValue) * 100 : 0
+        };
+      })
+      .sort((a, b) => b.progressPercentage - a.progressPercentage)
+      .slice(0, 3);
+
+    res.status(200).json(topChallenges);
+  } catch (err) {
+    console.error("トップチャレンジ取得エラー:", err);
+    res.status(500).json({ message: "サーバーエラーが発生しました" });
+  }
+});
+
 // ユーザーのチャレンジ詳細を取得
 router.get("/user/:userId", verifyToken, async (req, res) => {
   try {

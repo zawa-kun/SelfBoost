@@ -1,8 +1,20 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle } from "../components/ui/card";
-import { Progress } from "../components/ui/progress";
+
+const goalTypeColors = {
+  'ページ': 'bg-blue-600',
+  '日': 'bg-green-600',
+  '時間': 'bg-yellow-600',
+  '分': 'bg-red-600',
+  '回': 'bg-purple-600',
+  '章': 'bg-indigo-600',
+  'km': 'bg-pink-600',
+  'default': 'bg-gray-600'
+};
 
 const ChallengeDetail = ({ challenge }) => {
+  const progressColor = goalTypeColors[challenge.goalType] || goalTypeColors['default'];
+
   return (
     <Card className="mb-4">
       <CardHeader>
@@ -13,7 +25,12 @@ const ChallengeDetail = ({ challenge }) => {
           <span>進捗状況</span>
           <span>{challenge.progressPercentage.toFixed(1)}%</span>
         </div>
-        <Progress value={challenge.progressPercentage} className="w-full" />
+        <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+          <div
+            className={`${progressColor} h-2.5 rounded-full`}
+            style={{ width: `${challenge.progressPercentage}%` }}
+          ></div>
+        </div>
         <div className="mt-2 text-sm text-muted-foreground">
           目標: {challenge.goalValue} {challenge.goalType}
         </div>

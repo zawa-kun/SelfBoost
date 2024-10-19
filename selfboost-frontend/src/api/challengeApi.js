@@ -22,6 +22,28 @@ export const getUserChallenges = async (userId) => {
   }
 };
 
+//ユーザー登録数上位３つチャレンジを取得
+export const getRecommendedChallenges = async () => {
+  try {
+    const response = await apiClient.get('/challenges/recommended');
+    return response.data;
+  } catch (error) {
+    console.error('おすすめチャレンジ取得エラー:', error);
+    throw error;
+  }
+};
+
+//ユーザーのチャレンジ達成度上位３つを取得
+export const getTopUserChallenges = async () => {
+  try {
+    const response = await apiClient.get('/challenges/user/top');
+    return response.data;
+  } catch (error) {
+    console.error('トップチャレンジ取得エラー:', error);
+    throw error;
+  }
+};
+
 //チャレンジ取得（すべて）
 export const getChallenges = async () => {
   try {

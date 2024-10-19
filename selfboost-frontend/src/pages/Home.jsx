@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Sideber from '../components/Sidebar';
 import PostForm from '../components/PostForm';
@@ -9,9 +9,10 @@ import RecommendedChallenges from '../components/RecommendedChallenges';
 import QuickStats from '../components/QuickStats';
 import Footer from '../components/Footer';
 import { getAllPosts, getFollowingTimeline } from '../api/timelineApi';
+import { DarkModeContext } from '../contexts/DarkModeContext';
 
 export default function Home() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode , toggleDarkMode } = useContext(DarkModeContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [postContent, setPostContent] = useState(''); //テキストボックスの大きさを自動調整するため
   const [activeTab, setActiveTab] = useState('all'); //タイムラインに表示する投稿主の設定（すべての投稿orフォロー中）
@@ -19,7 +20,7 @@ export default function Home() {
   const [loading,setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
+
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   const onPostCreated = (newPost) => {
@@ -54,16 +55,24 @@ export default function Home() {
     fetchTimeline(activeTab);
   }, [activeTab]);
 
+  const updatePost = useCallback((updatedPost) => {
+    setPosts(prevPosts => 
+      prevPosts.map(post => 
+        post._id === updatedPost._id ? updatedPost : post
+      )
+    );
+  }, []);
+
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} toggleSidebar={toggleSidebar}/>
+      <Header toggleSidebar={toggleSidebar} toggleDarkMode={toggleDarkMode}/>
       <div className="flex pt-16">
         <Sideber darkMode={darkMode} sidebarOpen={sidebarOpen}/>
         {/* メインコンテンツ */}
         <main className="flex-1 md:ml-64 px-4 md:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto py-6">
             <div className="space-y-6">
-              <PostForm darkMode={darkMode} postContent={postContent} setPostContent={setPostContent} onPostCreated={onPostCreated} />
+              <PostForm darkMode={darkMode} postContent={postContent} setPostContent={setPostContent} onPostCreated={onPostCreated}/>
               <PostTabs activeTab={activeTab} setActiveTab={setActiveTab} />
               {loading ? (
                 <p>ロード中...</p>
@@ -71,7 +80,7 @@ export default function Home() {
                 <p className="text-red-500">{error}</p>
               ) : (
                 posts.map((post) => (
-                  <Post key={post._id} darkMode ={darkMode} post={post}/>
+                  <Post key={post._id} darkMode ={darkMode} post={post} updatePost={updatePost}/>
                 ))
               )}
             </div>

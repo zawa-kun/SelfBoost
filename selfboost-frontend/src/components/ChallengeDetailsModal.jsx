@@ -1,6 +1,19 @@
 import React from "react";
 
+const goalTypeColors = {
+  'ページ': 'bg-blue-600',
+  '日': 'bg-green-600',
+  '時間': 'bg-yellow-600',
+  '分': 'bg-red-600',
+  '回': 'bg-purple-600',
+  '章': 'bg-indigo-600',
+  'km': 'bg-pink-600',
+  'default': 'bg-gray-600'
+};
+
 function ChallengeDetailsModal({challenge,darkMode,onClose,onUpdateProgress,onJoinChallenge,isPersonal,currentUserId,}) {
+  const progressColor = goalTypeColors[challenge.goalType] || goalTypeColors['default'];
+
   if (!challenge) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -38,12 +51,6 @@ function ChallengeDetailsModal({challenge,darkMode,onClose,onUpdateProgress,onJo
   const progress = userParticipation?.progress || 0;
   const progressPercentage = goalValue ? (progress / goalValue) * 100 : 0;
 
-  const getTimeAgo = (date) => {
-    // ... 既存の実装をそのまま使用 ...
-  };
-
-  const timeAgo = getTimeAgo(createdAt);
-
   const handleProgressUpdate = () => {
     onUpdateProgress(challenge);
   };
@@ -76,14 +83,11 @@ function ChallengeDetailsModal({challenge,darkMode,onClose,onUpdateProgress,onJo
           </span>
           <span className="text-sm ml-4">参加者: {totalParticipants}人</span>
         </div>
-        <div className="mb-4">
-          <span className="text-sm ml-4">状態: {participantStatus}</span>
-        </div>
         {(isPersonal || isParticipating) && (
           <>
             <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mb-2">
               <div
-                className="bg-blue-600 h-2.5 rounded-full"
+                className={`${progressColor} h-2.5 rounded-full`}
                 style={{ width: `${progressPercentage}%` }}
               ></div>
             </div>

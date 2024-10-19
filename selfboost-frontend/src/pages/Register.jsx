@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { MoonIcon, SunIcon } from '@heroicons/react/24/solid';
 import { register } from '../api/authApi';
-
+import { DarkModeContext } from '../contexts/DarkModeContext';
 
 export default function Register() {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
   const [userData, setuserData] = useState({
     username: '',
     email: '',
@@ -16,10 +16,6 @@ export default function Register() {
   const [isSubmitting,setIsSubmitting] = useState(false);
   const [touched,setTouched] = useState(false);
   const navigate = useNavigate();
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
   
   //データの入力
   const handleChange = (e) => {

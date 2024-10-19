@@ -38,7 +38,7 @@ function Sidebar({darkMode,sidebarOpen}) {
                 
               </li>
               <li>
-                <Link to={`profile/${user._id}`}>
+                <Link to={`/profile/${currentUserId}`}>
                   <button className="w-full flex items-center p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
                     <UserIcon className="h-5 w-5 mr-2" />
                     プロフィール

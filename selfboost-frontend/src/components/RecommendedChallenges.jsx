@@ -1,7 +1,31 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getRecommendedChallenges } from "../api/challengeApi";
 
-function RecommendedChallenges({darkMode}) {
+function RecommendedChallenges({ darkMode }) {
+  const [recommendedChallenges, setRecommendedChallenges] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchRecommendedChallenges = async () => {
+      try {
+        const challenges = await getRecommendedChallenges();
+        setRecommendedChallenges(challenges);
+      } catch (err) {
+        setError("おすすめチャレンジの取得に失敗しました。");
+        console.error("おすすめチャレンジ取得エラー:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommendedChallenges();
+  }, []);
+
+  if (loading) return <p>読み込み中...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
     <div
       className={`p-4 md:p-6 rounded-lg shadow-md ${
@@ -12,18 +36,12 @@ function RecommendedChallenges({darkMode}) {
         おすすめのチャレンジ
       </h2>
       <ul className="space-y-3">
-        <li className="flex items-center">
-          <span className="bg-blue-500 h-2 w-2 rounded-full mr-2"></span>
-          30日間連続瞑想チャレンジ
-        </li>
-        <li className="flex items-center">
-          <span className="bg-green-500 h-2 w-2 rounded-full mr-2"></span>
-          1週間の感謝日記チャレンジ
-        </li>
-        <li className="flex items-center">
-          <span className="bg-yellow-500 h-2 w-2 rounded-full mr-2"></span>
-          21日間早起きチャレンジ
-        </li>
+        {recommendedChallenges.map((challenge, index) => (
+          <li key={challenge._id} className="flex items-center">
+            <span className={`bg-${['blue', 'green', 'yellow'][index]}-500 h-2 w-2 rounded-full mr-2`}></span>
+            {challenge.title}
+          </li>
+        ))}
       </ul>
       <Link to="/challenge">
         <button

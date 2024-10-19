@@ -24,11 +24,9 @@ const userSchema = new mongoose.Schema(
     },
     profilePicture: {
       type: String,
-      default: "default-profile-picture.jpg",
     },
     backgroundPicture: {
       type: String,
-      default: "default-background-picture.jpg",
     },
     followers: [
       {

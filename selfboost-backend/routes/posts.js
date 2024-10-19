@@ -1,32 +1,16 @@
 const router = require("express").Router();
 const Post = require("../models/Post");
+const upload = require("../middleware/upload");
 const { verifyToken } = require("../middleware/auth");
-const multer = require("multer");
-const path = require("path");
 
-// Multerの設定
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
-
-const upload = multer({ storage: storage });
-
-// 新規投稿作成
-router.post("/", verifyToken, upload.single('image'), async (req, res) => {
+// 新規投稿作成(画像付き)
+router.post("/", verifyToken, upload.single('postImage'), async (req, res) => {
   try {
-    // 必要なフィールドのみ取得
-    const { text, challengeId } = req.body;
-
     const newPost = new Post({
       userId: req.userId,
-      text: text,
-      challengeId: challengeId,
-      imgUrl: req.file ? `/uploads/${req.file.filename}` : null,
+      text: req.body.text,
+      challengeId: req.body.challengeId ? challengeId : null,
+      imgUrl: req.file ? `/uploads/posts/${req.file.filename}` : null,
     });
 
     const savedPost = await newPost.save();
