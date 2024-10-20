@@ -15,7 +15,7 @@ SelfBoostは、これらの要素を通じて、自己成長の喜びと楽し�
 
 ## 画面プレビュー
 
-![画面プレビュー](./images/selfboost-preview.gif)
+![画面プレビュー](./images/SelfBoost-preview.gif)
 
 <br />
 
@@ -73,6 +73,6 @@ SelfBoostは以下の主要機能を提供します：
 
 ## ER図
 
-<img src="./images/selfboost-ER.jpg" alt="SelfBoost ER" height="700">
+<img src="./images/SelfBoost-ER.jpg" alt="SelfBoost ER" height="700">
 
 <br />
