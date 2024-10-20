@@ -40,11 +40,7 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    isAdmin: {
-      type: Boolean,
-      default: false,
-    },
-    desc: {
+    description: {
       type: String,
       maxlength: [250, "desc cannot be more than 250 characters long"],
     },
@@ -54,22 +50,6 @@ const userSchema = new mongoose.Schema(
         ref: "Challenge",
       },
     ],
-    location: {
-      type: String,
-      trim: true,
-    },
-    privacySettings: {
-      profileVisibility: {
-        type: String,
-        enum: ["Public", "Friends", "Private"],
-        default: "Public",
-      },
-      activityVisibility: {
-        type: String,
-        enum: ["Public", "Friends", "Private"],
-        default: "Public",
-      },
-    },
   },
   { timestamps: true } //データ入力時の日付を自動的に記録
 );
