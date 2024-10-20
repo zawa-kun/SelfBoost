@@ -71,6 +71,6 @@ SelfBoostは、これらの要素を通じて、自己成長の喜びと楽し�
 
 ## ER図
 
-<img src="./images/SelfBoost-ER.jpg" alt="SelfBoost ER" height="700">
+<img src="./images/SelfBoost-ER.jpg" alt="SelfBoost ER">
 
 <br />
