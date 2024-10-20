@@ -1,4 +1,4 @@
-﻿![サービスロゴ](.\images\SelfBoost-logo.jpg)
+﻿![サービスロゴ](./images/SelfBoost-logo.jpg)
 
 <br />
 
