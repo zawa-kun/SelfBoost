@@ -62,7 +62,7 @@ SelfBoostは、これらの要素を通じて、自己成長の喜びと楽し�
 | バックエンド           | Node.js, Express.js               |
 | データベース    | MongoDB                                  |
 | API通信          |Axios                                   |
-| 状態管理       | Ract Context API                          |
+| 状態管理       | React Context API                          |
 | ルーティング | React Router                                |
 | 認証             | JSON Web Tokens(JWT)                   |
 | 開発環境          | npm                                    |
